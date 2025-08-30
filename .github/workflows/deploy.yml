@@ -28,7 +28,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.deploy-role }}
+          role-to-assume: ${{ secrets.DEPLOY_ROLE }}
           aws-region: ap-northeast-2
       - name: Deploy Lambda function
         run: |
