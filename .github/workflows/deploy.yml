@@ -1,0 +1,38 @@
+name: Deploy
+
+on:
+  workflow_dispatch: {}
+permissions:
+  id-token: write
+  contents: read 
+defaults:
+  run:
+    working-directory: "./hello-world"
+env:
+  function-name: go-hello-world-function
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Build Lambda function
+        run: |
+          go mod tidy
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap -tags lambda.norpc .
+          zip myFunction.zip bootstrap
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.deploy-role }}
+          aws-region: ap-northeast-2
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.function-name }} \
+            --zip-file fileb://myFunction.zip \
+            --region ap-northeast-2
